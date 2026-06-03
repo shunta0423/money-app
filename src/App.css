@@ -144,8 +144,7 @@ button {
   font-family: inherit;
 }
 
-button[type="submit"],
-button:not(.calendar-nav button):not(.expense-remove) {
+.add-expense-button {
   padding: 8px 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -155,10 +154,7 @@ button:not(.calendar-nav button):not(.expense-remove) {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 6px;
-  display: block;
   width: 100%;
-  margin-bottom: 0;
 }
 
 button:not(.calendar-nav button):not(.expense-remove):hover {
@@ -240,9 +236,14 @@ button:not(.calendar-nav button):not(.expense-remove):active {
   font-size: 0.85rem;
 }
 
-.calendar-day:hover {
+.calendar-day--clickable {
+  cursor: pointer;
+}
+
+.calendar-day--clickable:hover {
   border-color: #667eea;
-  background: #f7fafc;
+  background: #f0f5ff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
 }
 
 .calendar-day--empty {
@@ -255,6 +256,14 @@ button:not(.calendar-nav button):not(.expense-remove):active {
   color: #2d3748;
   font-size: 0.85rem;
   flex-shrink: 0;
+}
+
+.calendar-day-total {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: auto;
 }
 
 .expense-item {
@@ -318,21 +327,181 @@ button:not(.calendar-nav button):not(.expense-remove):active {
   text-align: center;
 }
 
-@media (max-width: 1024px) {
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.2rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f7fafc;
+  color: #2d3748;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fafbfc;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.modal-expense-item:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.expense-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-category {
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.expense-amount {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95rem;
+}
+
+.modal-expense-remove {
+  padding: 2px 4px;
+  background: #fc8181;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.modal-expense-remove:hover {
+  background: #f56565;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1400px) {
+  .app-container {
+    overflow: auto;
+    height: auto;
+  }
+
   .app-main {
     flex-direction: column;
+    overflow: visible;
+    height: auto;
   }
 
   .input-section {
     flex: 0 0 auto;
-    max-height: 40vh;
+    overflow: visible;
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
   }
 
   .calendar-section {
-    flex: 1;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow: visible;
   }
 
   .calendar {

@@ -22,6 +22,8 @@ function App() {
 
   const [category, setCategory] = useState("食費");
 
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     const saved = localStorage.getItem("expenses");
     if (!saved) return [];
@@ -68,6 +70,7 @@ function App() {
     setExpenses((prev) => [newExpense, ...prev]);
     setBalance((prev) => prev - value);
     setAmount("");
+    setSelectedDate(null);
   };
 
   const removeExpense = (id: string) => {
@@ -156,6 +159,11 @@ function App() {
     return map;
   }, [expenses, displayMonth]);
 
+  const getTotalForDay = (dayExpenses: Expense[] | undefined) => {
+    if (!dayExpenses) return 0;
+    return dayExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  };
+
   if (today.getDate() >= 25) {
     nextPayday.setMonth(nextPayday.getMonth() + 1);
   }
@@ -168,6 +176,10 @@ function App() {
   );
 
   const dailyBudget = Math.floor(balance / daysLeft);
+
+  const selectedDateExpenses = selectedDate
+    ? expensesByDay.get(String(selectedDate.getDate()))
+    : undefined;
 
   return (
     <div className="app-container">
@@ -201,7 +213,14 @@ function App() {
             onChange={(e) => setAmount(e.target.value)}
           />
 
-          <button onClick={addExpense}>支出追加</button>
+          <button
+            className="add-expense-button"
+            onClick={addExpense}
+            
+            
+          >
+            支出追加
+</button>
 
           <hr />
 
@@ -265,13 +284,19 @@ function App() {
                 const dayExpenses = date
                   ? expensesByDay.get(String(date.getDate()))
                   : undefined;
+                const totalAmount = getTotalForDay(dayExpenses);
 
                 return (
                   <div
                     key={dayKey}
                     className={`calendar-day ${
                       date ? "" : "calendar-day--empty"
-                    }`}
+                    } ${date && dayExpenses && dayExpenses.length > 0 ? "calendar-day--clickable" : ""}`}
+                    onClick={() => {
+                      if (date && dayExpenses && dayExpenses.length > 0) {
+                        setSelectedDate(date);
+                      }
+                    }}
                   >
                     {date ? (
                       <>
@@ -279,31 +304,9 @@ function App() {
                           {date.getDate()}
                         </div>
                         {dayExpenses && dayExpenses.length > 0 ? (
-                          dayExpenses.map((expense, expenseIndex) => {
-                            const categoryName =
-                              expense.category || expense.name || "支出";
-                            const categoryClass =
-                              categoryClassMap[expense.category || "その他"] ||
-                              "category-other";
-
-                            return (
-                              <div
-                                key={expenseIndex}
-                                className={`expense-item ${categoryClass}`}
-                              >
-                                <span>
-                                  {categoryName} {expense.amount}円
-                                </span>
-                                <button
-                                  type="button"
-                                  className="expense-remove"
-                                  onClick={() => removeExpense(expense.id)}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            );
-                          })
+                          <div className="calendar-day-total">
+                            {totalAmount}円
+                          </div>
                         ) : (
                           <div className="no-expense">予定なし</div>
                         )}
@@ -316,6 +319,67 @@ function App() {
           </div>
         </div>
       </div>
+
+      {selectedDate && selectedDateExpenses && selectedDateExpenses.length > 0 && (
+        <div className="modal-overlay" onClick={() => setSelectedDate(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                {selectedDate.toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "short",
+                })}
+              </h3>
+              <button
+                className="modal-close"
+                onClick={() => setSelectedDate(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              {selectedDateExpenses.map((expense) => {
+                const categoryName = expense.category || expense.name || "支出";
+                const categoryClass =
+                  categoryClassMap[expense.category || "その他"] ||
+                  "category-other";
+
+                return (
+                  <div key={expense.id} className="modal-expense-item">
+                    <div className="expense-info">
+                      <span className={`expense-category ${categoryClass}`}>
+                        {categoryName}
+                      </span>
+                      <span className="expense-amount">{expense.amount}円</span>
+                    </div>
+                    <button
+                      style={{
+                        padding: "8px 12px",
+                        fontSize: "16px",
+                      }}
+                      type="button"
+                      className="modal-expense-remove"
+                      onClick={() => {
+                        removeExpense(expense.id);
+                        const updated = expensesByDay.get(
+                          String(selectedDate.getDate())
+                        );
+                        if (!updated || updated.length === 0) {
+                          setSelectedDate(null);
+                        }
+                      }}
+                    >
+                      削除
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
